@@ -1,0 +1,38 @@
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <div class="alert alert-info">
+            {{ messages[0] }}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Upload or link file</title>
+</head>
+
+<body>
+    <h1>Upload or link file</h1>
+
+    <form action="/upload" method="post" enctype="multipart/form-data">
+
+        <!-- File upload option -->
+        <div>
+            <label for="file">Upload from Desktop:</label>
+            <input type="file" name="file" id="file">
+        </div>
+        <br><br>
+
+        <!-- URL link option -->
+         <div>
+            <label for="url">Paste URL:</label>
+            <input type="text" name="url" id="url" placeholder="https://th.bing.com/th/id/OIP.1iVne1pqATfprkFdZgpbEQAAAA?w=300&h=400&rs=1&pid=ImgDetMain">
+         </div>
+         <br><br>
+         <button type="submit">Submit</button>
+    </form>
+</body>
+</html>
