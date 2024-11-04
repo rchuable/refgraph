@@ -10,17 +10,16 @@ References (see why I need this app???)
 '''
 
 import os
+import sqlite3
 from flask import Flask, render_template, g, request, redirect, url_for, flash
-import sqlite3 # added after db initialized
-from cs50 import SQL
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.config['DATABASE'] = 'database.db'
 app.secret_key = "ReginaChua!369damnshefine"
-db = SQL("sqlite:///database.db")
 
-## Database
+
+## Establish connection
 def get_db():
     if 'db' not in g:
         g.db = sqlite3.connect(app.config['DATABASE'])
@@ -37,18 +36,21 @@ def close_db(exception):
 def index():
     return render_template("index.html")
 
-## Testing
-# Making sure that it lists the tables
+## Testing: Making sure that it lists the tables
 @app.route('/test_db')
 def test_db():
-    db = get_db()
-    cursor = db.execute('SELECT name FROM sqlite_master WHERE type="table"')
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT name FROM sqlite_master WHERE type="table"')
     tables = cursor.fetchall()
     return f"Tables in the database: {tables}"
 
 ## Upload
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
+    conn = get_db()
+    cursor = conn.cursor()
+
     if request.method == "POST":
         file = request.files.get("file")
         url = request.form.get("url")
@@ -57,15 +59,15 @@ def upload():
         if file and file.filename:
             filename = secure_filename(file.filename)
             file.save(os.path.join("uploads", filename))
-            db.execute("INSERT INTO files (filename, filetype) VALUES (?, ?)", (filename, 'file'))
-            db.commit()
+            cursor.execute("INSERT INTO files (filename, filetype) VALUES (?, ?)", (filename, 'file'))
+            conn.commit()
             flash("File uploaded successfully.")
 
         # validate url
         elif url:
             if url.startswith("http"):
-                db.execute("INSERT INTO urls (url) VALUES (?)", (url,))
-                db.commit()
+                cursor.execute("INSERT INTO urls (url) VALUES (?)", (url,))
+                conn.commit()
                 flash("URL added successfully.")
             else:
                 flash("Invalid URL. Please enter a valid link.")
