@@ -34,7 +34,17 @@ def close_db(exception):
 ## Homepage
 @app.route("/")
 def index():
-    return render_template("index.html")
+    conn = get_db()
+    cursor = conn.cursor()
+
+    # Display all files and URLs
+    cursor.execute("SELECT * FROM files")
+    files = cursor.fetchall()
+
+    cursor.execute("SELECT * FROM urls")
+    urls = cursor.fetchall()
+
+    return render_template("index.html", files=files, urls=urls)
 
 ## Testing: Making sure that it lists the tables
 @app.route('/test_db')
@@ -46,6 +56,9 @@ def test_db():
     return f"Tables in the database: {tables}"
 
 ## Upload
+if not os.path.exists("uploads"):
+    os.makedirs("uploads")
+
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
     conn = get_db()
@@ -53,13 +66,15 @@ def upload():
 
     if request.method == "POST":
         file = request.files.get("file")
-        url = request.form.get("url")
+        url = request.form.get("url")      
 
         # save file
         if file and file.filename:
             filename = secure_filename(file.filename)
-            file.save(os.path.join("uploads", filename))
-            cursor.execute("INSERT INTO files (filename, filetype) VALUES (?, ?)", (filename, 'file'))
+            filepath = os.path.join("uploads", filename)
+            file.save(filepath)
+
+            cursor.execute("INSERT INTO files (filename, filepath, filetype) VALUES (?, ?, ?)", (filename, filepath, 'file'))
             conn.commit()
             flash("File uploaded successfully.")
 
@@ -76,8 +91,8 @@ def upload():
             flash("Please upload a file or enter a URL.")
 
         return redirect(url_for("upload"))
-
-    return render_template("upload.html")
+    
+    return render_template("upload.html", files=files, urls=urls)
 
 # Ayo RUN
 if __name__ == "__main__":
